@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Predictor</title>
+    <!-- Add your CSS styles here -->
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            animation: pulse 2s infinite alternate;
+            background: linear-gradient(45deg, #1a1a1a, #000);
+        }
+
+        @keyframes pulse {
+            0% {
+                background-size: 100% 100%;
+                filter: brightness(1);
+            }
+            100% {
+                background-size: 150% 150%;
+                filter: brightness(0.8);
+            }
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        #search-container {
+            text-align: center;
+            color: white;
+            margin-top: 50px;
+        }
+
+        #stock-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #symbol, #start_date, #end_date {
+            margin: 10px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        #suggestions {
+            color: white;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        #graph-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #stock-graph {
+            max-width: 100%;
+        }
+
+        #time-tabs {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .tab.active {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>Stock Predictor App</h1>
+
+    <div id="search-container">
+        <form id="stock-form">
+            <label for="symbol">Stock Symbol:</label>
+            <input type="text" id="symbol" name="symbol" required>
+
+            <label for="start_date">Start Date:</label>
+            <input type="date" id="start_date" name="start_date" required>
+
+            <label for="end_date">End Date:</label>
+            <input type="date" id="end_date" name="end_date" required>
+
+            <button type="submit">Search</button>
+        </form>
+        <div id="suggestions"></div>
+    </div>
+
+    <div id="graph-container">
+        <!-- Placeholder for the graph (replace with actual graph implementation) -->
+        <canvas id="stock-graph"></canvas>
+    </div>
+
+    <div id="time-tabs">
+        <button class="tab" onclick="changeTimeFrame('1w')">1 Week</button>
+        <button class="tab" onclick="changeTimeFrame('1m')">1 Month</button>
+        <button class="tab" onclick="changeTimeFrame('1y')">1 Year</button>
+        <button class="tab" onclick="changeTimeFrame('5y')">5 Years</button>
+        <button class="tab" onclick="changeTimeFrame('10y')">10 Years</button>
+    </div>
+
+    <!-- Add your JavaScript code here -->
+    <script>
+        document.getElementById('stock-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const symbol = document.getElementById('symbol').value;
+            const start_date = document.getElementById('start_date').value;
+            const end_date = document.getElementById('end_date').value;
+
+            // Make AJAX request to Flask route
+            fetch('/get_stock_data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'symbol': symbol,
+                    'start_date': start_date,
+                    'end_date': end_date,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Assuming the returned data contains the stock graph information
+                    renderStockGraph(data.stock_data);
+                } else {
+                    console.error('Failed to fetch stock data:', data.message);
+                    // Handle error, show a message, etc.
+                }
+            })
+            .catch(error => {
+                console.error('Error during fetch:', error);
+                // Handle error, show a message, etc.
+            });
+        });
+
+        function renderStockGraph(stockData) {
+            // Implement logic to render the stock graph using a charting library like Chart.js, D3.js, etc.
+            // This part depends on the charting library you choose.
+            // For simplicity, let's assume you're using Chart.js.
+
+            const ctx = document.getElementById('stock-graph').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: stockData.dates,
+                    datasets: [{
+                        label: 'Closing Prices',
+                        data: stockData.prices,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1,
+                        fill: false,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                },
+            });
+        }
+    </script>
+</body>
+</html>
